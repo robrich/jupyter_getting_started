@@ -1,0 +1,10 @@
+__pycache__
+.venv
+.ipynb_checkpoints
+data/postgres
+data/mssql
+outtakes
+results
+!results/.gitkeep
+*.txt
+Untitled.ipynb

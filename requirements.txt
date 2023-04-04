@@ -1,0 +1,17 @@
+# jupyter as a web server:
+notebook==6.5.3
+# jupyter from VS Code:
+ipykernel==6.22.0
+# data & graphing:
+numpy==1.24.2
+pandas==1.5.3
+matplotlib==3.7.1
+# databases:
+sqlalchemy==2.0.8
+psycopg2==2.9.6
+pyodbc==4.0.35
+# runbook:
+requests==2.28.2
+# api:
+fastapi==0.95.0
+uvicorn==0.21.1
