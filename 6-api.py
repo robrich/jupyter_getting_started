@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from io import BytesIO
 from starlette.responses import StreamingResponse
 
-
+# TODO: get from env vars
 pg_host = 'localhost'
 pg_port = 5432
 pg_user = 'postgres'
@@ -22,12 +22,13 @@ latest = data.year.max()
 earliest = data.year.min()
 years = data.year.unique()
 print('years:', years)
+countries = data.country.unique()
 
 app = FastAPI()
 
 @app.get("/")
 async def root():
-    return {"urls": ["/docs", "/years", "/life-expectancy", "/population", "/gdp-per-capita"]}
+    return {"urls": ["/docs", "/years", "/life-expectancy/{year}", "/population/{year}", "/gdp-per-capita/{year}", "/countries", "/country/{country_name}"]}
 
 @app.get("/years")
 async def get_years():
@@ -42,7 +43,7 @@ async def get_population(year: int = latest):
     continent = sel_year.groupby('continent')
 
     plt.clf()
-    continent.mean().lifeExp.plot(title=f'Life Expectancy in {year}')
+    continent.mean().lifeExp.plot(title=f'Life Expectancy in {year}', kind='bar')
 
     buf = BytesIO()
     plt.savefig(buf, format="png")
@@ -78,7 +79,7 @@ async def get_population(year: int = latest):
     continent = sel_year.groupby('continent')
 
     plt.clf()
-    continent.gdpPercap.sum().plot(title=f'GDP per Capita in {year}')
+    continent.gdpPercap.sum().plot(title=f'GDP per Capita in {year}', kind='bar')
 
     buf = BytesIO()
     plt.savefig(buf, format="png")
@@ -97,7 +98,53 @@ def valid_year(year):
 
     return year
 
+@app.get("/countries")
+async def get_countries():
+    return countries.tolist()
+
+@app.get("/country/{country_name}")
+async def get_country(country_name: str = 'United States'):
+
+    if (valid_country(country_name) == False):
+        return {"error": "invalid country"}
+
+    country = data[data.country == country_name]
+
+    plt.clf()
+
+    fig, ax1 = plt.subplots(1,1)
+
+    ax1.plot(country['year'], country['lifeExp'], 'red', linestyle='-', label='life expectancy')
+    ax1.set_xlabel('year')
+    ax1.set_ylabel('life expectancy', color='r')
+    ax1.tick_params('y', colors='r')
+
+    ax2 = ax1.twinx()
+    ax2.spines['right'].set_position(('axes', 1.2)) # move the axis right a bit
+    ax2.plot(country['year'], country['pop'], 'blue', linestyle=':', label='population')
+    ax2.set_ylabel('population (Mil)', color='blue')
+    ax2.tick_params('y', colors='blue')
+
+    ax3 = ax1.twinx()
+    ax3.plot(country['year'], country['gdpPercap'], 'black', linestyle='--', label='gdp per capita')
+    ax3.set_ylabel('gdp per capita', color='black')
+    ax3.tick_params('y', colors='black')
+
+    fig.tight_layout()
+
+    plt.title(f'{country_name}, {country.continent.unique()[0]}')
+
+    buf = BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+
+    return StreamingResponse(buf, media_type="image/png")
+
+def valid_country(country):
+    return (country in countries)
+
+
 print('Open http://localhost:8000/docs to see swagger page.')
 
 # start app:
-# python -m uvicorn 6-api:app --reload
+# uvicorn 6-api:app --reload
