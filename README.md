@@ -1,7 +1,7 @@
-Getting Started with Jupyter
-============================
+The Culture of Python
+=====================
 
-This is a demo of getting started with Jupyter
+This is a demo of getting started with Jupyter, and shows the culture of Python.
 
 Install
 -------
